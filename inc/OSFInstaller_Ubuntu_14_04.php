@@ -106,33 +106,15 @@
       
       $this->cecho("Installing prerequirements...\n", 'WHITE');
       
-      $this->exec('apt-get -y install openjdk-7-jdk');
-      
-      $this->cecho("Preparing installation...\n", 'WHITE');
-
-      $this->exec('mkdir -p /tmp/solr-install/');
-      
-      $this->chdir('/tmp/solr-install/');
-      
-      $this->cecho("Downloading Solr...\n", 'WHITE');
-      
-      $this->wget('http://archive.apache.org/dist/lucene/solr/3.6.0/apache-solr-3.6.0.tgz');
+      $this->exec('apt-get -y install default-jre default-jdk');
       
       $this->cecho("Installing Solr...\n", 'WHITE');
 
-      $this->exec('tar -xzvf apache-solr-3.6.0.tgz');
-
-      $this->exec('mkdir -p /usr/share/solr');
-      
-      $this->exec('cp -af /tmp/solr-install/apache-solr-3.6.0/* /usr/share/solr/');
+      $this->exec('apt-get -y install solr-tomcat');      
       
       $this->cecho("Configuring Solr...\n", 'WHITE');
       
       $this->chdir($this->currentWorkingDirectory);
-
-      $this->exec('cp -f resources/solr/solr /etc/init.d/');
-      
-      $this->exec('chmod 755 /etc/init.d/solr');
       
       $this->exec('mv /usr/share/solr/example/ /usr/share/solr/osf-web-services/');
       
