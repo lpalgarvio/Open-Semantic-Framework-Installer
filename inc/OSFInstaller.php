@@ -13,9 +13,24 @@
     }
 
     /**
-     * Tries to install PHP5 using the packages available for the Linux distribution
+     * System :: PHP
      */
-    abstract public function installPhp5();
+    abstract public function installPHP();
+
+    /**
+     * System :: Java
+     */
+    abstract public function installJava();
+
+    /**
+     * System :: Apache
+     */
+    abstract public function installApache();
+
+    /**
+     * System :: MySQL
+     */
+    abstract public function installMySQL();
 
     /**
      * Install Virtuoso as required by OSF
@@ -31,16 +46,6 @@
      * Install Memcached as required by OSF
      */
     abstract public function installMemcached();
-
-    /**
-     * Install Apache2 as required by OSF
-     */
-    abstract public function installApache2();
-
-    /**
-     * Install MySQL as required by OSF
-     */
-    abstract public function installMySQL();
 
     /**
      * Install MySQL as required by OSF

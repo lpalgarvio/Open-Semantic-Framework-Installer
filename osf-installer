@@ -331,24 +331,43 @@
     $installer->switch_OSF_OntologiesManagementTool('load');
   }
 
-  // Install Apache2 on the system
-  if(isset($arguments['install-apache2']))
+  /**
+   *  System :: PHP
+   */
+  if(isset($arguments['install-php']))
   {
-    $installer->installApache2();
+    $installer->installPHP();
   }
-  
-  // Install PHP5 on the system
-  if(isset($arguments['install-php5']))
+
+  /**
+   *  System :: Java
+   */
+  if(isset($arguments['install-java']))
   {
-    $installer->installPhp5();
+    $installer->installJava();
   }
-  
-  // Install MySQL on the system
-  if(isset($arguments['install-mysql']))
-  {
+
+  /**
+   *  System :: Apache HTTPd
+   */
+  if(isset($arguments['install-apache'])) {
+    $installer->installApache();
+  }
+
+  /**
+   *  System :: Apache Tomcat
+   */
+  if(isset($arguments['install-tomcat'])) {
+    $installer->installTomcat();
+  }
+
+  /**
+   *  System :: MySQL
+   */
+  if(isset($arguments['install-mysql'])) {
     $installer->installMySQL();
   }
-  
+
   // Install PhpMyAdmin on the system
   if(isset($arguments['install-phpmyadmin']))
   {

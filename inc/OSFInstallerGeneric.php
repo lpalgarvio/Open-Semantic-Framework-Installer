@@ -7,15 +7,40 @@
     /**
     * Install the entire OSF stack. Running this command will install the full stack on the server
     * according to the settings specified in the installer.ini file.
-    */  
-    /**
-    * Tries to install PHP5 using the packages available for the linux distribution
     */
-    public function installPhp5()
-    { 
+
+    /**
+     * System :: PHP
+     */
+    public function installPHP()
+    {
       $this->span("Option not supported for this Linux distribution and version.", 'error');
     }
-    
+
+    /**
+     * System :: Java
+     */
+    public function installJava()
+    {
+      $this->span("Option not supported for this Linux distribution and version.", 'error');
+    }
+
+    /**
+     * System :: Apache
+     */
+    public function installApache()
+    {
+      $this->span("Option not supported for this Linux distribution and version.", 'error');
+    }
+
+    /**
+     * System :: MySQL
+     */
+    public function installMySQL()
+    {
+      $this->span("Option not supported for this Linux distribution and version.", 'error');
+    }
+
     /**
     * Install Virtuoso as required by OSF
     */
@@ -28,22 +53,6 @@
     * Install Solr as required by OSF
     */
     public function installSolr()
-    {
-      $this->span("Option not supported for this Linux distribution and version.", 'error');
-    }
-
-    /**
-    * Install Apache2 as required by OSF
-    */
-    public function installApache2()
-    {
-      $this->span("Option not supported for this Linux distribution and version.", 'error');
-    }
-
-    /**
-    * Install MySQL as required by OSF
-    */
-    public function installMySQL()
     {
       $this->span("Option not supported for this Linux distribution and version.", 'error');
     }
