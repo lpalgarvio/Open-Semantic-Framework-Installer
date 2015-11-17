@@ -1004,5 +1004,320 @@
       return($this->commandReturn($return, 17));
     }
 
+    /**
+     * Applies an action to the Package Management System (PMS).
+     * 
+     * @param  string   $action    Action to take on the PMS.
+     *                             Allowed actions: refresh (caches),
+     *                             clear (caches), and upgrade (packages).
+     *
+     * @return boolean  Returns the result from commandReturn().
+     */
+    public function pmsAction($action)
+    {
+      // Prepare commands for each distro PMS
+      switch($this->distro_pms) {
+
+        // Apt PMS
+        case 'apt':
+          // Refresh repo caches
+          if($action == 'refresh') {
+            // Build command
+            $command = "apt-get update";
+          // Clear repo caches
+          } elseif($action == 'clear') {
+            // Build command
+            $command = "apt-get clean";
+          // Upgrade packages
+          } elseif($action == 'upgrade') {
+            // Build command
+            $command = "apt-get upgrade -y";
+          }
+          break;
+
+        // YUM PMS
+        case 'yum':
+          // Refresh repo caches
+          if($action == 'refresh') {
+            // Build command
+            $command = "yum makecache";
+          // Clear repo caches
+          } elseif($action == 'clear') {
+            // Build command
+            $command = "yum clean";
+          // Upgrade packages
+          } elseif($action == 'upgrade') {
+            // Build command
+            $command = "yum update -y";
+          }
+          break;
+
+        // Unknown PMS
+        default:
+          //TODO FAIL
+          break;
+
+      }
+
+      // Log command
+      $this->log(array($command), TRUE);
+
+      // Execute command and log output
+      $output = array();
+      exec($command, $output, $return);
+      $this->log($output);
+
+      return($this->commandReturn($return, 18));
+    }
+
+    /**
+     * Applies an action to a given array of package(s), using the 
+     * Package Management System (PMS).
+     * 
+     * @param  string   $action    Action to take on the package(s).
+     *                             Allowed actions: install, reinstall,
+     *                             and uninstall.
+     * @param  array    $packages  Package(s) to affect.
+     *
+     * @return boolean  Returns the result from commandReturn().
+     */
+    public function packageAction($action, $packages)
+    {
+      // Flat the list of packages
+      $package_list = '';
+      foreach ($packages as &$package) {
+        $package_list .= $package;
+      }
+
+      // Prepare commands for each distro PMS
+      switch($this->distro_pms) {
+
+        // Apt PMS
+        case 'apt':
+          // Install package(s)
+          if($action == 'install') {
+            // Build command
+            $command = "apt-get install -y {$package_list}";
+          // Reinstall package(s)
+          } elseif($action == 'reinstall') {
+            // Build command
+            $command = "apt-get install --reinstall -y {$package_list}";
+          // Uninstall package(s)
+          } elseif($action == 'uninstall') {
+            // Build command
+            $command = "apt-get uninstall --purge -y {$package_list}";
+          }
+          break;
+
+        // YUM PMS
+        case 'yum':
+          // Install package(s)
+          if($action == 'install') {
+            // Build command
+            $command = "yum install -y {$package_list}";
+          // Reinstall package(s)
+          } elseif($action == 'reinstall') {
+            // Build command
+            $command = "yum reinstall -y {$package_list}";
+          // Uninstall package(s)
+          } elseif($action == 'uninstall') {
+            // Build command
+            $command = "yum remove -y {$package_list}";
+          }
+          break;
+
+        // Unknown PMS
+        default:
+          //TODO FAIL
+          break;
+
+      }
+
+      // Log command
+      $this->log(array($command), TRUE);
+
+      // Execute command and log output
+      $output = array();
+      exec($command, $output, $return);
+      $this->log($output);
+
+      return($this->commandReturn($return, 19));
+    }
+
+    /**
+     * Configures the service in the system.
+     * 
+     * @param  string   $action    Action to take on the service.
+     *                             Allowed actions: enable, disable,
+     *                             status, start, restart, stop.
+     * @param  array    $service   Package(s) to affect.
+     *
+     * @return boolean  Returns the result from commandReturn().
+     */
+    public function serviceConfig($action, $service)
+    {
+      // Prepare commands for each distro srvconf
+      switch($this->distro_srvconf) {
+
+        // update-rc.d srvconf
+        case 'update-rc.d':
+          // Enable service
+          if($action == 'enable') {
+            // Build command
+            $command = "update-rc.d {$service} enable";
+          // Disable service
+          } elseif($action == 'disable') {
+            // Build command
+            $command = "update-rc.d {$service} disable";
+          }
+          break;
+
+        // chkconfig srvconf
+        case 'chkconfig':
+          // Enable service
+          if($action == 'enable') {
+            // Build command
+            $command = "chkconfig {$service} on";
+          // Disable service
+          } elseif($action == 'disable') {
+            // Build command
+            $command = "chkconfig {$service} off";
+          }
+          break;
+
+        // Systemd srvconf
+        case 'systemd':
+          // Enable service
+          if($action == 'enable') {
+            // Build command
+            $command = "systemctl enable {$service}";
+          // Disable service
+          } elseif($action == 'disable') {
+            // Build command
+            $command = "systemctl disable {$service}";
+          }
+          break;
+
+        // Unknown srvconf
+        default:
+          //TODO FAIL
+          break;
+
+      }
+
+      // Log command
+      $this->log(array($command), TRUE);
+
+      // Execute command and log output
+      $output = array();
+      exec($command, $output, $return);
+      $this->log($output);
+
+      return($this->commandReturn($return, 20));
+    }
+
+    /**
+     * Applies an action to a given service in the system.
+     * 
+     * @param  string   $action    Action to take on the service.
+     *                             Allowed actions: status, reload,
+     *                             start, restart and stop.
+     * @param  array    $service   Package(s) to affect.
+     *
+     * @return boolean  Returns the result from commandReturn().
+     */
+    public function serviceAction($action, $service)
+    {
+      // Prepare commands for each distro Initd
+      switch($this->distro_initd) {
+
+        // SysVinit Initd
+        case 'sysvinit':
+          // Check status of service
+          if($action == 'status') {
+            // Build command
+            $command = "service {$service} status";
+          // Reload service
+          } elseif($action == 'reload') {
+            // Build command
+            $command = "service {$service} reload";
+          // Start service
+          } elseif($action == 'start') {
+            // Build command
+            $command = "service {$service} start";
+          // Restart service
+          } elseif($action == 'restart') {
+            // Build command
+            $command = "service {$service} restart";
+          // Stop service
+          } elseif($action == 'stop') {
+            // Build command
+            $command = "service {$service} stop";
+          }
+          break;
+
+        // Systemd Initd
+        case 'systemd':
+          // Check status of service
+          if($action == 'status') {
+            // Build command
+            $command = "systemctl status {$service}";
+          // Reload service
+          } elseif($action == 'reload') {
+            // Build command
+            $command = "systemctl reload {$service}";
+          // Start service
+          } elseif($action == 'start') {
+            // Build command
+            $command = "systemctl start {$service}";
+          // Restart service
+          } elseif($action == 'restart') {
+            // Build command
+            $command = "systemctl restart {$service}";
+          // Stop service
+          } elseif($action == 'stop') {
+            // Build command
+            $command = "systemctl stop {$service}";
+          }
+          break;
+
+        // Unknown Initd
+        default:
+          // Check status of service
+          if($action == 'status') {
+            // Build command
+            $command = "/etc/init.d/{$service} status";
+          // Reload service
+          } elseif($action == 'reload') {
+            // Build command
+            $command = "/etc/init.d/{$service} reload";
+          // Start service
+          } elseif($action == 'start') {
+            // Build command
+            $command = "/etc/init.d/{$service} start";
+          // Restart service
+          } elseif($action == 'restart') {
+            // Build command
+            $command = "/etc/init.d/{$service} restart";
+          // Stop service
+          } elseif($action == 'stop') {
+            // Build command
+            $command = "/etc/init.d/{$service} stop";
+          }
+          break;
+
+      }
+
+      // Log command
+      $this->log(array($command), TRUE);
+
+      // Execute command and log output
+      $output = array();
+      exec($command, $output, $return);
+      $this->log($output);
+
+      return($this->commandReturn($return, 21));
+    }
+
   }
 
