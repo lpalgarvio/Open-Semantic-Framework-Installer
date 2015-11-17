@@ -7,119 +7,34 @@
 
     /* Full path of the logfile */
     protected $log_file = '';
-    
-    /* Specify that the installation process occurs in an automatic deployment framework */
-    protected $auto_deploy = TRUE;    
 
+    /* Specify that the installation process occurs in an automatic deployment framework */
+    protected $auto_deploy = TRUE;
+
+    /* Current working directory */
     protected $currentWorkingDirectory;
 
     function __construct()
     {
       $this->currentWorkingDirectory = getcwd();
     }
-    
-    private function commandReturn($commandReturnVal, $errorStatus, $errorLevel = 'error')
+
+    /**
+     * Enable the verbosity of the class. Everything get outputed to the 
+     * shell terminal
+     */
+    public function verbose()
     {
-      if(is_bool($commandReturnVal))
-      {
-        if($commandReturnVal === FALSE)
-        {
-          $commandReturnVal = 1;
-        }
-        else
-        {
-          $commandReturnVal = 0;
-        }
-      }
-      
-      if ($commandReturnVal > 0) 
-      {
-        switch (strtolower($errorLevel)) 
-        {
-          case 'ignore':
-            return(TRUE);
-          break;
-          
-          case 'notice':
-            $this->span("An occured but the script continue its process. Check the log to see what was the error: {$this->log_file}", 'notice');
-          break;
-
-          case 'warning':
-            $this->span("An occured but the script continue its process. Check the log to see what was the error: {$this->log_file}", 'warn');
-          break;
-
-          case 'error':
-            if(!$this->auto_deploy)
-            {
-              $this->span("A non-recoverable error happened. Check the log to see what was the error: {$this->log_file}", 'error');
-              
-              $yes = $this->isYes($this->getInput("Do you want to continue the execution. If yes, then try to fix this error by hands before continuing, otherwise errors may occurs later in the process? (yes/no)\n"));
-              
-              if (!$yes){
-                exit($errorStatus);
-              }              
-            }
-            else
-            {
-              exit($errorStatus);
-            }
-          break;
-        }
-
-        return(FALSE);
-      } 
-      else 
-      {
-        return(TRUE);
-      }      
+      $this->verbose = TRUE;
     }
 
     /**
-     * Execute a shell command
-     * The command is also logged into the logging file
-     *     
-     * @param $command    the shell command to execute
-     * @param $errorLevel the level of the error if an error happens. There are 4 levels:
-     *                    (1) ignore, (2) notice, (3) warning and (4) error. The ignore
-     *                    level doesn't display anything, the notice level output an error
-     *                    in light-cyan, the warning level output an error message in yellow
-     *                    color and a error error output an error message in red and 
-     *                    stops the execution of the script.
-     * 
-     * @return Returns TRUE if the command succeeded, FALSE otherwise
+     * Disable the verbosity of the class. No command output will be displayed
+     * to the terminal.
      */
-    public function exec($command, $errorLevel = 'error')
+    public function silent()
     {
-      $output = array();
-      $this->log(array($command), TRUE);
-
-      exec($command, $output, $return);
-      $this->log($output);
-
-      return($this->commandReturn($return, 2, $errorLevel));
-    }
-
-    /**
-     * Change the current folder of the script
-     * The command is also logged into the logging file
-     *     
-     * @param mixed $dir  folder path where to go
-     * @param $errorLevel the level of the error if an error happens. There are 4 levels:
-     *                    (1) ignore, (2) notice, (3) warning and (4) error. The ignore
-     *                    level doesn't display anything, the notice level output an error
-     *                    in light-cyan, the warning level output an error message in yellow
-     *                    color and a error error output an error message in red and 
-     *                    stops the execution of the script. 
-     * 
-     * @return Return TRUE if the comman succeeded, FALSE otherwise
-     */
-    public function chdir($dir, $errorLevel = 'error')
-    {
-      $this->log(array("cd {$dir}"), TRUE);
-
-      $success = chdir($dir);
-
-      return($this->commandReturn($success, 3, $errorLevel));
+      $this->verbose = FALSE;
     }
 
     /**
@@ -162,16 +77,15 @@
 
       if ($return) {
         return(chr(27) . "$out$text" . chr(27) . "[0m");
-      }
-      else {
+      } else {
         echo chr(27) . "$out$text" . chr(27) . chr(27) . "[0m";
       }
     }
 
     /**
-     * Outputs a header #1 (h1) message
+     * Outputs a header #1 (h1) message.
      * 
-     * @param string  $message   Message to output
+     * @param string  $message   Message to output.
      */
     public function h1($message)
     {
@@ -185,9 +99,9 @@
     }
 
     /**
-     * Outputs a header #2 (h2) message
+     * Outputs a header #2 (h2) message.
      * 
-     * @param string  $message   Message to output
+     * @param string  $message   Message to output.
      */
     public function h2($message)
     {
@@ -198,9 +112,9 @@
     }
 
     /**
-     * Outputs a header #3 (h3) message
+     * Outputs a header #3 (h3) message.
      * 
-     * @param string  $message   Message to output
+     * @param string  $message   Message to output.
      */
     public function h3($message)
     {
@@ -211,10 +125,10 @@
     }
 
     /**
-     * Outputs a span message
+     * Outputs a span message.
      * 
-     * @param string  $message   Message to output
-     * @param string  $severity  Severity of message (optional)
+     * @param string  $message   Message to output.
+     * @param string  $severity  Severity of message (optional).
      */
     public function span($message, $severity = 'info')
     {
@@ -246,11 +160,11 @@
     }
 
     /**
-     * Log information into the logging file
+     * Log information into the logging file.
      * 
-     * @param mixed $lines         An array of lines to log into the logging file
-     * @param mixed $forceSilence  Specify if we want to overwrite the verbosity of 
-     *                             the script and make sure that log() stay silent
+     * @param array    $lines         An array of lines to log into the file.
+     * @param boolean  $forceSilence  Overwrite the verbosity of the script
+     *                                and make sure that log() stay silent.
      */
     public function log($lines, $forceSilence = FALSE)
     {
@@ -263,49 +177,105 @@
     }
 
     /**
-     * Enable the verbosity of the class. Everything get outputed to the 
-     * shell terminal
+     * Analyzes ouput of commands.
+     *
+     * @param mixed    $commandReturnVal  Result of the command, normally as
+     *                                    a boolean or integer value.
+     * @param integer  $errorStatus       Error status code.
+     * @param string   $errorLevel        Error level mode.
+     *
+     * There are 4 levels:
+     * (1) ignore, (2) notice, (3) warning and (4) error.
+     * The ignore level doesn't display anything, the notice level outputs an
+     * error in light-cyan color, the warning level outputs an error message in
+     * yellow color, and a error error outputs an error message in red color
+     * and stops the execution of the script.
      */
-    public function verbose()
+    private function commandReturn($commandReturnVal, $errorStatus, $errorLevel = 'error')
     {
-      $this->verbose = TRUE;
-    }
+      // Check for boolean result
+      if(is_bool($commandReturnVal)) {
+        if($commandReturnVal === FALSE) {
+          $commandReturnVal = 1;
+        } else {
+          $commandReturnVal = 0;
+        }
+      }
 
-    /**
-     * Disable the verbosity of the class. No command output will be displayed
-     * to the terminal.
-     */
-    public function silent()
-    {
-      $this->verbose = FALSE;
+      // Parse the error
+      if ($commandReturnVal > 0) {
+        // Respect the errorLevel imposed
+        switch (strtolower($errorLevel)) {
+
+          // Ignore errors
+          case 'ignore':
+            return(TRUE);
+          break;
+
+          // Notices of low importance
+          case 'notice':
+            $this->span("An occured but the script continue its process. Check the log to see what was the error: {$this->log_file}", 'notice');
+          break;
+
+          // Warnings without major impact
+          case 'warning':
+            $this->span("An occured but the script continue its process. Check the log to see what was the error: {$this->log_file}", 'warn');
+          break;
+
+          // Errors with severe consequences
+          case 'error':
+            if($this->auto_deploy == FALSE) {
+              $this->span("A non-recoverable error happened. Check the log to see what was the error: {$this->log_file}", 'error');
+              // Get answer
+              $continue = $this->isYes($this->getInput("Do you want to continue the execution. If yes, then try to fix this error by hands before continuing, otherwise errors may occurs later in the process? (yes/no)\n"));
+              if ($continue == FALSE) {
+                exit($errorStatus);
+              }
+            }
+            else {
+              exit($errorStatus);
+            }
+          break;
+
+        }
+        return(FALSE);
+      } else {
+        return(TRUE);
+      }
     }
 
     /**
      * Prompt the user with a question, wait for input, and return that input
      * from the user.
      *     
-     * @param mixed $msg Message to display to the user before waiting for an answer.
+     * @param  mixed    $msg  Message to display to the user before waiting
+     *                        for an answer.
      * 
-     * @return Returns the answer of the user.
+     * @return boolean  Returns the answer of the user.
      */
     public function getInput($msg)
     {
+      // Prompt and get an answer
       fwrite(STDOUT, $this->cecho("$msg: ", 'MAGENTA', TRUE));
-      $varin = trim(fgets(STDIN));
+      $input = trim(fgets(STDIN));
 
-      $this->log(array("[USER-INPUT]: ".$varin."\n"), TRUE);
+      // Log the input
+      $this->log(array("[USER-INPUT]: {$input}\n"), TRUE);
 
-      return $varin;
+      return $input;
     }
 
     /**
-     * Check if the answer of an input is equivalent to "yes". The strings that
-     * are equivalent to "yes" are:
-     *   "1", "true", "on", "y" and "yes". Returns FALSE otherwise.
+     * Check if the answer of an input is equivalent to "yes".
+     * The strings that are equivalent to "yes" are:
+     *   "1", "true", "on", "y" and "yes".
+     * The strings that are equivalent to "no" are:
+     *   "0", "false", "off", "n" and "no".
      * 
-     * @param mixed $input Input to test
+     * @param  mixed    $input  Input to test.
      * 
-     * @param Returns TRUE if the input is equivalent to "yes", FALSE otherwise
+     * @return boolean  Returns TRUE if the input is equivalent to "yes",
+     *                  FALSE otherwise.
      */
     public function isYes($input)
     {
@@ -313,22 +283,26 @@
         return(FALSE);
       }
 
-      $input = strtolower($input);
-      $answer = filter_var($input, FILTER_VALIDATE_BOOLEAN, array('flags' => FILTER_NULL_ON_FAILURE));
+      // Get a boolean with filter
+      $options = array(
+        'flags' => FILTER_NULL_ON_FAILURE,
+      );
+      $result = filter_var(strtolower($input), FILTER_VALIDATE_BOOLEAN, $options);
 
-      if ($input == 'y') {
+      if ($result == FALSE || $input == 'n') {
+        return(FALSE);
+      } elseif ($result == TRUE || $input == 'y') {
         return(TRUE);
       }
-
-      return($answer);
     }
 
     /**
-     * Check if the provided input is a boolean
+     * Check if the provided input is a boolean.
      * 
-     * @param mixed $input        Input to test
+     * @param  mixed    $input  Input to test.
      * 
-     * @param Returns TRUE if the input is a valid boolean, FALSE otherwise
+     * @return boolean  Returns TRUE if the input is a valid boolean,
+     *                  FALSE otherwise.
      */
     public function isBoolean($input)
     {
@@ -336,6 +310,7 @@
         return(FALSE);
       }
 
+      // Validate with filter
       $options = array(
         'flags' => FILTER_NULL_ON_FAILURE,
       );
@@ -349,11 +324,11 @@
     }
 
     /**
-     * Get a boolean value from an input
+     * Get a boolean value from an input.
      * 
-     * @param mixed $input        Input to parse
+     * @param  mixed    $input  Input to parse.
      * 
-     * @param Returns TRUE or FALSE
+     * @return boolean  Returns always TRUE or FALSE.
      */
     public function getBoolean($input)
     {
@@ -361,6 +336,7 @@
         return(FALSE);
       }
 
+      // Get a boolean with filter
       $options = array(
         'flags' => FILTER_NULL_ON_FAILURE,
       );
@@ -370,11 +346,12 @@
     }
 
     /**
-     * Check if the provided input is a integer number
+     * Check if the provided input is a integer number.
      * 
-     * @param mixed $input        Input to test
+     * @param  mixed    $input  Input to test.
      * 
-     * @param Returns TRUE if the input is a valid integer number, FALSE otherwise
+     * @return boolean  Returns TRUE if the input is a valid integer number,
+     *                  FALSE otherwise.
      */
     public function isInteger($input)
     {
@@ -382,6 +359,7 @@
         return(FALSE);
       }
 
+      // Validate with filter
       $validation = filter_var($input, FILTER_VALIDATE_INT);
 
       if ($validation == FALSE) {
@@ -392,11 +370,12 @@
     }
 
     /**
-     * Check if the provided input is an alpha numeric string
+     * Check if the provided input is an alpha numeric string.
      * 
-     * @param mixed $input        Input to test
+     * @param  mixed    $input  Input to test.
      * 
-     * @param Returns TRUE if the input is a valid alpha numeric, FALSE otherwise
+     * @return boolean  Returns TRUE if the input is a valid alpha numeric,
+     *                  FALSE otherwise.
      */
     public function isAlphaNumeric($input)
     {
@@ -416,13 +395,15 @@
     }
 
     /**
-     * Check if the provided input is a valid version
+     * Check if the provided input is a valid version.
      * 
-     * @param mixed $input        Input to test
+     * @param  mixed    $input  Input to test.
      * 
-     * @param Returns TRUE if the input is a valid version, FALSE otherwise
+     * @return boolean  Returns TRUE if the input is a valid version,
+     *                  FALSE otherwise.
      */
-    public function isVersion($input) {
+    public function isVersion($input)
+    {
       if ($input === NULL) {
         return(FALSE);
       }
@@ -438,14 +419,16 @@
     }
 
     /**
-     * Check if the provided input is a valid path
+     * Check if the provided input is a valid path.
      * 
-     * @param mixed $input        Input to test
-     * @param mixed $absolute     Treat the path as absolute or not
+     * @param  mixed    $input     Input to test.
+     * @param  mixed    $absolute  Treat the path as absolute or not.
      * 
-     * @param Returns TRUE if the input is a valid path, FALSE otherwise
+     * @return boolean  Returns TRUE if the input is a valid path,
+     *                  FALSE otherwise.
      */
-    public function isPath($input, $absolute = TRUE) {
+    public function isPath($input, $absolute = TRUE)
+    {
       if ($input === NULL) {
         return(FALSE);
       }
@@ -465,30 +448,34 @@
     }
 
     /**
-     * Get a path from an input
+     * Get a path from an input.
      * 
-     * @param mixed $input        Input to parse
+     * @param  mixed    $input  Input to parse.
      * 
-     * @param Returns string
+     * @return string   Returns a string with the path.
      */
-    public function getPath($input) {
+    public function getPath($input)
+    {
       if ($input === NULL) {
         return(FALSE);
       }
 
+      // Trim excessive slashes
       $result = rtrim($input, '/');
 
       return($result);
     }
 
     /**
-     * Check if the provided input is a valid domain
+     * Check if the provided input is a valid domain.
      * 
-     * @param mixed $input        Input to test
+     * @param  mixed    $input  Input to test.
      * 
-     * @param Returns TRUE if the input is a valid domain, FALSE otherwise
+     * @return boolean  Returns TRUE if the input is a valid domain,
+     *                  FALSE otherwise.
      */
-    public function isDomain($input) {
+    public function isDomain($input)
+    {
       if ($input === NULL) {
         return(FALSE);
       }
@@ -505,13 +492,15 @@
     }
 
     /**
-     * Check if the provided input is a valid IP address
+     * Check if the provided input is a valid IP address.
      * 
-     * @param mixed $input        Input to test
+     * @param  mixed    $input  Input to test.
      * 
-     * @param Returns TRUE if the input is a valid IP address, FALSE otherwise
+     * @return boolean  Returns TRUE if the input is a valid IP address,
+     *                  FALSE otherwise.
      */
-    public function isIP($input) {
+    public function isIP($input)
+    {
       if ($input === NULL) {
         return(FALSE);
       }
@@ -527,11 +516,12 @@
     }
 
     /**
-     * Check if the provided input is a port number
+     * Check if the provided input is a port number.
      * 
-     * @param mixed $input        Input to test
+     * @param  mixed    $input  Input to test.
      * 
-     * @param Returns TRUE if the input is a valid port number, FALSE otherwise
+     * @return boolean  Returns TRUE if the input is a valid port number,
+     *                  FALSE otherwise.
      */
     public function isPort($input)
     {
@@ -556,25 +546,86 @@
     }
 
     /**
-     * Finds and replaces content in a file
+     * Execute a shell command.
+     *     
+     * @param  string   $command     Shell command to execute.
+     * @param  string   $errorLevel  Level of the error if an error happens.
+     *
+     * @return boolean  Returns the result from commandReturn().
+     */
+    public function exec($command, $errorLevel = 'error')
+    {
+      // Log command
+      $this->log(array($command), TRUE);
+
+      // Execute command and log output
+      $output = array();
+      exec($command, $output, $return);
+      $this->log($output);
+
+      return($this->commandReturn($return, 2, $errorLevel));
+    }
+
+    /**
+     * Change the current folder of the script.
+     *     
+     * @param  string   $dir         Folder path where to go.
+     * @param  string   $errorLevel  Level of the error if an error happens.
+     *
+     * @return boolean  Returns the result from commandReturn().
+     */
+    public function chdir($dir, $errorLevel = 'error')
+    {
+      $this->log(array("cd {$dir}"), TRUE);
+
+      // Execute command
+      $return = chdir($dir);
+
+      return($this->commandReturn($return, 3, $errorLevel));
+    }
+
+    /**
+     * Append data to a file.
      * 
-     * @param string  $find       String to find
-     * @param string  $replace    String to replace
-     * @param string  $file       File to update
+     * @param  string   $data  Data to append.
+     * @param  string   $file  File to update.
+     *
+     * @return boolean  Returns the result from commandReturn().
+     */
+    public function append($data, $file)
+    {
+      $this->log(array("Append: ", $data, $file), TRUE);
+
+      // Execute command
+      $return = file_put_contents($file, $data, FILE_APPEND);
+
+      return($this->commandReturn(($return === FALSE ? 5 : 0), 5));
+    }
+
+    /**
+     * Finds and replaces content in a file, using sed.
+     * 
+     * @param  string   $find       String to find.
+     * @param  string   $replace    String to replace.
+     * @param  string   $file       File to update.
+     * @param  string   $modifiers  Modifiers to apply.
+     *
+     * @return boolean  Returns the result from commandReturn().
      */
     public function sed($find, $replace, $file, $modifiers = '')
     {
-      $output = array();
-
       // Escape reserved sed characters
       $find = str_replace(array('"', '$', '>'), array('\"', '\$', '\>'), $find);
       $replace = str_replace(array('"', '$', '>'), array('\"', '\$', '\>'), $replace);
-      
+
       // Build command
       $command = "sed -i \"s>{$find}>{$replace}>{$modifiers}\" \"{$file}\"";
-      
+
+      // Log command
       $this->log(array($command), TRUE);
 
+      // Execute command and log output
+      $output = array();
       exec($command, $output, $return);
       $this->log($output);
 
@@ -582,40 +633,29 @@
     }
 
     /**
-     * Append data to a file
+     * Sets an option in a ini file, using sed.
      * 
-     * @param string  $data       Data to append
-     * @param string  $file       File to update
-     */
-    public function append($data, $file)
-    {
-      $this->log(array("Append: ", $data, $file), TRUE);
-      
-      // Run command
-      $return = file_put_contents($file, $data, FILE_APPEND);
-
-      return($this->commandReturn(($return === FALSE ? 5 : 0), 5));
-    }
-
-    /**
-     * Sets an option in a ini file
-     * 
-     * @param string  $section    Section to find
-     * @param string  $option     Option to change
-     * @param string  $value      Value to set
-     * @param string  $file       File to update
+     * @param  string   $section  Section to find.
+     * @param  string   $option   Option to change.
+     * @param  string   $value    Value to set.
+     * @param  string   $file     File to update.
+     *
+     * @return boolean  Returns the result from commandReturn().
      */
     public function setIni($section, $option, $value, $file)
     {
-      $output = array();
-      $this->log(array($section, $option, $value, $file), TRUE);
-
       // Build command
       // https://stackoverflow.com/questions/10040255/edit-file-in-unix-using-sed
       // sed -ie '/^\[Section B\]/,/^\[.*\]/s/^\(\$param2[ \t]*=[ \t]*\).*$/\1new_value/' foo.txt
       $value = str_replace("/", "\/", $value);
       $command = "sed -i -e '/^\[{$section}\]/,/^\[.*\]/s/^\({$option}[ \\t]*=[ \\t]*\).*$/\\1{$value}/' \"{$file}\"";
 
+      // Log command
+      $this->log(array($section, $option, $value, $file), TRUE);
+      $this->log(array($command), TRUE);
+
+      // Execute command and log output
+      $output = array();
       exec($command, $output, $return);
       $this->log($output);
 
@@ -623,82 +663,30 @@
     }
 
     /**
-     * Creates a directory
+     * Changes owner for a path.
      * 
-     * @param string  $path       Path to create
-     */
-    public function mkdir($path)
-    {
-      $output = array();
-
-      // Build command
-      $command = "mkdir -p \"{$path}\"";
-      
-      $this->log(array($command), TRUE);
-
-      exec($command, $output, $return);
-      $this->log($output);
-
-      return($this->commandReturn($return, 7));
-    }
-
-    /**
-     * Remove path from filesystem
-     * 
-     * @param string  $path       Path to remove
-     * @param boolean $recursion  Enable or disable recursion (optional)
-     */
-    public function rm($path, $recursion = FALSE)
-    {
-      $output = array();
-
-      // Build command
-      $command = "rm -f";
-      // Check for recursion
-      if ($recursion == TRUE) {
-        $command .= " -R";
-      }
-      // Build command
-      if(strpos($path, '*') !== FALSE)
-      {
-        $command .= " {$path}";
-      }
-      else
-      {
-        $command .= " \"{$path}\"";
-      }
-
-      $this->log(array($command), TRUE);      
-      
-      exec($command, $output, $return);
-      $this->log($output);
-
-      return($this->commandReturn($return, 8));
-    }
-
-    /**
-     * Changes owner for a path
-     * 
-     * @param string  $path       Path to target
-     * @param string  $own        Owner to apply
-     * @param boolean $recursion  Enable or disable recursion (optional)
+     * @param  string   $path       Path to target.
+     * @param  string   $own        Owner to apply.
+     * @param  boolean  $recursion  Enable or disable recursion (optional).
+     *
+     * @return boolean  Returns the result from commandReturn().
      */
     public function chown($path, $own, $recursion = FALSE)
     {
-      $output = array();
-
       // Build command
       $command = "chown";
       // Check for recursion
       if ($recursion == TRUE) {
         $command .= " -R";
       }
-      
-      // Build command
+      // Append owner and path
       $command .= " \"{$own}\" \"{$path}\"";
 
+      // Log command
       $this->log(array($command), TRUE);
-      
+
+      // Execute command and log output
+      $output = array();
       exec($command, $output, $return);
       $this->log($output);
 
@@ -706,27 +694,30 @@
     }
 
     /**
-     * Changes group for a path
+     * Changes group for a path.
      * 
-     * @param string  $path       Path to target
-     * @param string  $grp        Group to apply
-     * @param boolean $recursion  Enable or disable recursion (optional)
+     * @param  string   $path       Path to target.
+     * @param  string   $grp        Group to apply.
+     * @param  boolean  $recursion  Enable or disable recursion (optional).
+     *
+     * @return boolean  Returns the result from commandReturn().
      */
     public function chgrp($path, $grp, $recursion = FALSE)
     {
-      $output = array();
-
       // Build command
       $command = "chgrp";
       // Check for recursion
       if ($recursion == TRUE) {
         $command .= " -R";
       }
-      // Build command
+      // Append group and path
       $command .= " \"{$grp}\" \"{$path}\"";
 
+      // Log command
       $this->log(array($command), TRUE);
-      
+
+      // Execute command and log output
+      $output = array();
       exec($command, $output, $return);
       $this->log($output);
 
@@ -736,26 +727,29 @@
     /**
      * Changes permissions for a path
      * 
-     * @param string  $path       Path to target
-     * @param string  $mod        Permissions modifier in octal or symbolic notion
-     * @param boolean $recursion  Enable or disable recursion (optional)
+     * @param  string   $path       Path to target.
+     * @param  string   $mod        Permissions modifier in octal
+     *                              or symbolic notion.
+     * @param  boolean  $recursion  Enable or disable recursion (optional).
+     *
+     * @return boolean  Returns the result from commandReturn().
      */
     public function chmod($path, $mod, $recursion = FALSE)
     {
-      $output = array();
-
       // Build command
       $command = "chmod";
       // Check for recursion
       if ($recursion == TRUE) {
         $command .= " -R";
       }
-      
-      // Build command
+      // Append mod and path
       $command .= " \"{$mod}\" \"{$path}\"";
 
-      $this->log(array($command), TRUE);      
-      
+      // Log command
+      $this->log(array($command), TRUE);
+
+      // Execute command and log output
+      $output = array();
       exec($command, $output, $return);
       $this->log($output);
 
@@ -763,15 +757,38 @@
     }
 
     /**
-     * Soft links a source file or directory
+     * Creates a directory.
      * 
-     * @param string  $src        Source file or directory
-     * @param string  $dest       Destination file or directory (optional)
+     * @param  string   $path  Path to create.
+     *
+     * @return boolean  Returns the result from commandReturn().
+     */
+    public function mkdir($path)
+    {
+      // Build command
+      $command = "mkdir -p \"{$path}\"";
+
+      // Log command
+      $this->log(array($command), TRUE);
+
+      // Execute command and log output
+      $output = array();
+      exec($command, $output, $return);
+      $this->log($output);
+
+      return($this->commandReturn($return, 7));
+    }
+
+    /**
+     * Soft links a source file or directory.
+     * 
+     * @param  string   $src   Source file or directory.
+     * @param  string   $dest  Destination file or directory (optional).
+     *
+     * @return boolean  Returns the result from commandReturn().
      */
     public function ln($src, $dest = '')
     {
-      $output = array();
-
       // Build command
       $command = "ln -sf \"{$src}\"";
       // Check for destination
@@ -779,8 +796,11 @@
         $command .= " \"{$dest}\"";
       }
 
-      $this->log(array($command), TRUE);      
-      
+      // Log command
+      $this->log(array($command), TRUE);
+
+      // Execute command and log output
+      $output = array();
       exec($command, $output, $return);
       $this->log($output);
 
@@ -788,34 +808,34 @@
     }
 
     /**
-     * Copies source files or directories to destination
+     * Copies source files or directories to destination.
      * 
-     * @param string  $src        Source file or directory
-     * @param string  $dest       Destination file or directory
-     * @param boolean $recursion  Enable or disable recursion (optional)
+     * @param  string   $src        Source file or directory.
+     * @param  string   $dest       Destination file or directory.
+     * @param  boolean  $recursion  Enable or disable recursion (optional).
+     *
+     * @return boolean  Returns the result from commandReturn().
      */
     public function cp($src, $dest, $recursion = FALSE)
     {
-      $output = array();
-
       // Build command
       $command = "cp -af";
       // Check for recursion
       if ($recursion == TRUE) {
         $command .= " -R";
       }
-      // Build command
-      if(strpos($src, '*') !== FALSE)
-      {
+      // Check for asterisk
+      if(strpos($src, '*') !== FALSE) {
         $command .= " {$src} \"{$dest}\"";
-      }                     
-      else
-      {     
+      } else {     
         $command .= " \"{$src}\" \"{$dest}\"";
       }
 
-      $this->log(array($command), TRUE);      
-      
+      // Log command
+      $this->log(array($command), TRUE);
+
+      // Execute command and log output
+      $output = array();
       exec($command, $output, $return);
       $this->log($output);
 
@@ -823,29 +843,29 @@
     }
 
     /**
-     * Moves source files or directories to destination
+     * Moves source files or directories to destination.
      * 
-     * @param string  $src        Source file or directory
-     * @param string  $dest       Destination file or directory
+     * @param  string   $src   Source file or directory.
+     * @param  string   $dest  Destination file or directory.
+     *
+     * @return boolean  Returns the result from commandReturn().
      */
     public function mv($src, $dest)
     {
-      $output = array();
-
       // Build command
       $command = '';
-      
-      if($src == '*')
-      {       
+      // Check for asterisk
+      if($src == '*') {
         $command = "mv -f * \"{$dest}\"";
-      }
-      else
-      {
+      } else {
         $command = "mv -f \"{$src}\" \"{$dest}\"";
-      }  
-        
+      }
+
+      // Log command
       $this->log(array($command), TRUE);
-      
+
+      // Execute command and log output
+      $output = array();
       exec($command, $output, $return);
       $this->log($output);
 
@@ -853,100 +873,135 @@
     }
 
     /**
-     * Unzips an archive in the ZIP format, using unzip command
+     * Remove path from filesystem.
      * 
-     * @param string  $arch       Archive file
-     * @param string  $dest       Destination directory (optional)
+     * @param  string   $path       Path to remove.
+     * @param  boolean  $recursion  Enable or disable recursion (optional).
+     *
+     * @return boolean  Returns the result from commandReturn().
+     */
+    public function rm($path, $recursion = FALSE)
+    {
+      // Build command
+      $command = "rm -f";
+      // Check for recursion
+      if ($recursion == TRUE) {
+        $command .= " -R";
+      }
+      // Check for asterisk
+      if(strpos($path, '*') !== FALSE) {
+        $command .= " {$path}";
+      } else {
+        $command .= " \"{$path}\"";
+      }
+
+      // Log command
+      $this->log(array($command), TRUE);
+
+      // Execute command and log output
+      $output = array();
+      exec($command, $output, $return);
+      $this->log($output);
+
+      return($this->commandReturn($return, 8));
+    }
+
+    /**
+     * Unzips an archive in the ZIP format, using unzip command.
+     * 
+     * @param  string   $arch  Archive file.
+     * @param  string   $dest  Destination directory (optional).
+     *
+     * @return boolean  Returns the result from commandReturn().
      */
     public function unzip($arch, $dest = '')
     {
-      $output = array();
-
       // Build command
       $command = "unzip -o \"{$arch}\"";
       // Check for destination
       if (!empty($dest)) {
         $command .= " -d \"{$dest}\"";
       }
-      
+
+      // Log command
       $this->log(array($command), TRUE);
 
+      // Execute command and log output
+      $output = array();
       exec($command, $output, $return);
       $this->log($output);
 
-      return($this->commandReturn($return, 14));
+      return($this->commandReturn($return, 15));
     }
 
     /**
-     * Downloads an URL to local system, using wget command
+     * Downloads an URL to local system, using wget command.
      * 
-     * @param string  $url        Source URL
-     * @param string  $dest       Destination directory (optional)
+     * @param  string   $url    Source URL.
+     * @param  string   $dest   Destination directory (optional).
+     * @param  boolean  $retry  Retry the download (optional).
+     *
+     * @return boolean  Returns the result from commandReturn().
      */
-    public function wget($url, $dest = '')
+    public function wget($url, $dest = '', $retry = TRUE)
     {
-      $output = array();
-
       // Build command
-      $command = "wget -qN \"{$url}\"";
+      $command = "wget -q --timestamping";
+      // Check for retry
+      if ($retry == TRUE) {
+        $command .= " --tries=3";
+      }
       // Check for destination
       if (!empty($dest)) {
-        $command .= " -P \"{$dest}\"";
+        $command .= " --directory-prefix=\"{$dest}\"";
       }
+      // Append URL
+      $command .= " \"{$url}\"";
 
-      $this->log(array($command), TRUE);      
-      
+      // Log command
+      $this->log(array($command), TRUE);
+
+      // Execute command and log output
+      $output = array();
       exec($command, $output, $return);
       $this->log($output);
 
-      if ($return > 0) {
-        // get the file that was being download from the URL
-        $pos = strrpos($url, '/');
-        $filename = substr($url, $pos + 1);
-
-        // Remove the file it tries to install
-        exec('rm '.$filename);
-
-        $this->span("Connection error while downloading the file $filename: retrying...", 'warn');
-
-        $this->wget($url);
-      }
-
-      return(TRUE);
+      return($this->commandReturn($return, 16));
     }
 
     /**
-     * Downloads an URL to local system, using curl command
+     * Downloads an URL to local system, using curl command.
      * 
-     * @param string  $url        Source URL
-     * @param string  $dest       Destination file (optional)
+     * @param  string   $url    Source URL.
+     * @param  string   $dest   Destination file (optional).
+     * @param  boolean  $retry  Retry the download (optional).
+     *
+     * @return boolean  Returns the result from commandReturn().
      */
-    public function curl($url, $dest = '')
+    public function curl($url, $dest = '', $retry = TRUE)
     {
-      $output = array();
+      // Build command
+      $command = "curl -s";
+      // Check for retry
+      if ($retry == TRUE) {
+        $command .= " --retry 3";
+      }
+      // Check for destination
+      if (!empty($dest)) {
+        $command .= " --output \"{$dest}\"";
+      }
+      // Append URL
+      $command .= " \"{$url}\"";
 
-      $command = "curl {$url}";
-      
+      // Log command
       $this->log(array($command), TRUE);
-      
+
+      // Execute command and log output
+      $output = array();
       exec($command, $output, $return);
       $this->log($output);
 
-      if ($return > 0) {
-        if (!empty($dest)) {
-          // Remove the file it tries to install
-          exec("rm {$dest}");
-
-          $this->span("Connection error downloading file $dest; retrying...", 'warn');
-        }
-        else {
-          $this->span("Connection error using Curl; retrying...", 'warn');
-        }
-
-        $this->curl($url, $dest);
-      }
-
-      return(TRUE);
+      return($this->commandReturn($return, 17));
     }
 
   }
